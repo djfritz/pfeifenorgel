@@ -59,138 +59,108 @@
 #define PAS4 PORTEbits.RE0
 #define PB4 PORTEbits.RE1
 
-// states:
-//  0 == scan for note on/off
-//  1 == note on, catch next byte as note
-//  2 == note off, catch next byte as note
-char state = 0;
+// MIDI parser state
+//  status:    last channel status byte seen (running status), 0 == none
+//  note:      first data byte (note number) of the current message
+//  have_note: 1 == note captured, waiting for velocity
+unsigned char status = 0;
+unsigned char note = 0;
+unsigned char have_note = 0;
+
+void set_note(unsigned char n, unsigned char on) {
+  if (n == NOTEC3) {
+    PC3 = on;
+  } else if (n == NOTECS3) {
+    PCS3 = on;
+  } else if (n == NOTED3) {
+    PD3 = on;
+  } else if (n == NOTEDS3) {
+    PDS3 = on;
+  } else if (n == NOTEE3) {
+    PE3 = on;
+  } else if (n == NOTEF3) {
+    PF3 = on;
+  } else if (n == NOTEFS3) {
+    PFS3 = on;
+  } else if (n == NOTEG3) {
+    PG3 = on;
+  } else if (n == NOTEGS3) {
+    PGS3 = on;
+  } else if (n == NOTEA3) {
+    PA3 = on;
+  } else if (n == NOTEAS3) {
+    PAS3 = on;
+  } else if (n == NOTEB3) {
+    PB3 = on;
+  } else if (n == NOTEC4) {
+    PC4 = on;
+  } else if (n == NOTECS4) {
+    PCS4 = on;
+  } else if (n == NOTED4) {
+    PD4 = on;
+  } else if (n == NOTEDS4) {
+    PDS4 = on;
+  } else if (n == NOTEE4) {
+    PE4 = on;
+  } else if (n == NOTEF4) {
+    PF4 = on;
+  } else if (n == NOTEFS4) {
+    PFS4 = on;
+  } else if (n == NOTEG4) {
+    PG4 = on;
+  } else if (n == NOTEGS4) {
+    PGS4 = on;
+  } else if (n == NOTEA4) {
+    PA4 = on;
+  } else if (n == NOTEAS4) {
+    PAS4 = on;
+  } else if (n == NOTEB4) {
+    PB4 = on;
+  }
+}
 
 void __interrupt() intr(void) {
   if (RCIF) {
-    RCIF = 0;
-    char data = RCREG;
+    unsigned char data = RCREG;
 
-    // first check if we even care
-    if (state == 0) {
-      if ((data & 0b10010000) == 0b10010000) {
-        state = 1;
-        return;
-      } else if ((data & 0b10000000) == 0b10000000) {
-        state = 2;
-        return;
-      }
-    } else if (state == 1) {
-      if (data < NOTEC3 || data > NOTEB4) {
-        state = 0;
-        return;
-      }
-      // turn on a note
-      if (data == NOTEC3) {
-        PC3 = 1;
-      } else if (data == NOTECS3) {
-        PCS3 = 1;
-      } else if (data == NOTED3) {
-        PD3 = 1;
-      } else if (data == NOTEDS3) {
-        PDS3 = 1;
-      } else if (data == NOTEE3) {
-        PE3 = 1;
-      } else if (data == NOTEF3) {
-        PF3 = 1;
-      } else if (data == NOTEFS3) {
-        PFS3 = 1;
-      } else if (data == NOTEG3) {
-        PG3 = 1;
-      } else if (data == NOTEGS3) {
-        PGS3 = 1;
-      } else if (data == NOTEA3) {
-        PA3 = 1;
-      } else if (data == NOTEAS3) {
-        PAS3 = 1;
-      } else if (data == NOTEB3) {
-        PB3 = 1;
-      } else if (data == NOTEC4) {
-        PC4 = 1;
-      } else if (data == NOTECS4) {
-        PCS4 = 1;
-      } else if (data == NOTED4) {
-        PD4 = 1;
-      } else if (data == NOTEDS4) {
-        PDS4 = 1;
-      } else if (data == NOTEE4) {
-        PE4 = 1;
-      } else if (data == NOTEF4) {
-        PF4 = 1;
-      } else if (data == NOTEFS4) {
-        PFS4 = 1;
-      } else if (data == NOTEG4) {
-        PG4 = 1;
-      } else if (data == NOTEGS4) {
-        PGS4 = 1;
-      } else if (data == NOTEA4) {
-        PA4 = 1;
-      } else if (data == NOTEAS4) {
-        PAS4 = 1;
-      } else if (data == NOTEB4) {
-        PB4 = 1;
-      }
-    } else if (state == 2) {
-      if (data < NOTEC3 || data > NOTEB4) {
-        state = 0;
-        return;
-      }
-      // turn off a note
-      if (data == NOTEC3) {
-        PC3 = 0;
-      } else if (data == NOTECS3) {
-        PCS3 = 0;
-      } else if (data == NOTED3) {
-        PD3 = 0;
-      } else if (data == NOTEDS3) {
-        PDS3 = 0;
-      } else if (data == NOTEE3) {
-        PE3 = 0;
-      } else if (data == NOTEF3) {
-        PF3 = 0;
-      } else if (data == NOTEFS3) {
-        PFS3 = 0;
-      } else if (data == NOTEG3) {
-        PG3 = 0;
-      } else if (data == NOTEGS3) {
-        PGS3 = 0;
-      } else if (data == NOTEA3) {
-        PA3 = 0;
-      } else if (data == NOTEAS3) {
-        PAS3 = 0;
-      } else if (data == NOTEB3) {
-        PB3 = 0;
-      } else if (data == NOTEC4) {
-        PC4 = 0;
-      } else if (data == NOTECS4) {
-        PCS4 = 0;
-      } else if (data == NOTED4) {
-        PD4 = 0;
-      } else if (data == NOTEDS4) {
-        PDS4 = 0;
-      } else if (data == NOTEE4) {
-        PE4 = 0;
-      } else if (data == NOTEF4) {
-        PF4 = 0;
-      } else if (data == NOTEFS4) {
-        PFS4 = 0;
-      } else if (data == NOTEG4) {
-        PG4 = 0;
-      } else if (data == NOTEGS4) {
-        PGS4 = 0;
-      } else if (data == NOTEA4) {
-        PA4 = 0;
-      } else if (data == NOTEAS4) {
-        PAS4 = 0;
-      } else if (data == NOTEB4) {
-        PB4 = 0;
-      }
-    } 
-    state = 0;
+    // an overrun stops the receiver until CREN is toggled
+    if (OERR) {
+      CREN = 0;
+      CREN = 1;
+    }
+
+    // ignore real-time bytes
+    if (data >= 0xF8) {
+      return;
+    }
+
+    // MSB being set at all means it's a status byte, and 0xF? means it's a
+    // system message (which we never care about)
+    //
+    // either way, if we see a status byte, we clear the note
+    if (data & 0x80) {
+      status = (data < 0xF0) ? data : 0;
+      have_note = 0;
+      return;
+    }
+
+    // data byte: we only care about note off (0x8n) and note on (0x9n)
+    unsigned char type = status & 0xF0;
+    if (type != 0x80 && type != 0x90) {
+      return;
+    }
+
+    // second byte is the note
+    if (!have_note) {
+      note = data;
+      have_note = 1;
+      return;
+    }
+
+    // third byte is the velocity. Note on with velocity 0 is actually note off... 
+    // The organ doesn't have velocity, so it's on or off
+    set_note(note, (type == 0x90 && data != 0) ? 1 : 0);
+    have_note = 0;
   }
 };
 
